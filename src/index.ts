@@ -1,16 +1,29 @@
-import WebSocket from 'ws';
+import {Server} from 'socket.io';
+import { ClientToServerEvents, ServerToClientEvents, SocketData } from './types';
 
-const wss = new WebSocket.Server({ port: 8080 });
 
-wss.on('connection', (ws: WebSocket) => {
-  console.log('New client connected');
 
-  ws.on('message', (message: string) => {
-    console.log(`Received message: ${message}`);
-    ws.send(`Server received your message: ${message}`);
+const socketServer = new Server<
+ClientToServerEvents,
+ServerToClientEvents,
+SocketData
+>(8080);
+
+socketServer.on('connection', (socket) => {
+  socket.data.name = "john";
+  socket.data.age = 42;
+
+  socket.emit("noArg");
+  socket.emit("basicEmit", 1, "2", Buffer.from([3]));
+  socket.emit("withAck", "4", (e) => {
+    // e is inferred as number
   });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
+  socketServer.emit("noArg");
+  socketServer.to("room1").emit("basicEmit", 1, "2", Buffer.from([3]));
+
+  socket.on("hello", () => {
+    // ...
   });
+
 });

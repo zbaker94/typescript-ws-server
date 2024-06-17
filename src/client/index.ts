@@ -1,17 +1,28 @@
-import WebSocket from 'ws';
+import { io, Socket } from "socket.io-client";
+import { ClientToServerEvents, ServerToClientEvents } from "../types";
 
-const ws = new WebSocket('ws://localhost:8080');
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io("http://localhost:8080");
 
-ws.on('open', () => {
-  console.log('Connected to server');
-
-  ws.send('Hello, server!');
+// client-side
+socket.on("connect", () => {
+  console.log(socket.id); 
+  socket.emit("hello");
 });
 
-ws.on('message', (message: string) => {
-  console.log(`Received message from server: ${message}`);
+socket.on("noArg", () => {
+  // ...
 });
 
-ws.on('close', () => {
-  console.log('Disconnected from server');
+socket.on("basicEmit", (a, b, c) => {
+  // a is inferred as number, b as string and c as buffer
+  console.log({a, b, c});
 });
+
+socket.on("withAck", (d, callback) => {
+  // d is inferred as string and callback as a function that takes a number as argument
+  console.log({d});
+  callback(5);
+});
+
+
+
